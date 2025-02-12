@@ -308,6 +308,7 @@ const HospitalMap = () => {
                 onClick={() => handleItemSelect(hospital)}
                 role="button"
                 tabIndex={0}
+                data-testid="hospital-item"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
