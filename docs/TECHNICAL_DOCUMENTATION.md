@@ -36,7 +36,14 @@ Hospital Tracker is a React-based web application that helps users locate nearby
    - Handles component errors
 
 ### State Management
-
+- **HospitalMap Component**
+  - `currentPosition`: Tracks user's current location
+  - `hospitals`: Stores list of nearby hospitals
+  - `isLoading`: Loading state indicator
+  - `error`: Error state management
+  - `cache`: Location-based caching system
+  - `selectedId`: Currently selected hospital
+  - `mapRef`: Reference to map instance
 
 ## Key Features
 
@@ -62,11 +69,32 @@ Hospital Tracker is a React-based web application that helps users locate nearby
 ## Data Flow
 
 ### 1. Location Detection
-
+1. Browser's Geolocation API is used to get user's position
+2. On successful location retrieval:
+   - Updates `currentPosition` state
+   - Triggers hospital search
+3. Error handling for:
+   - Permission denied
+   - Position unavailable
+   - Timeout
+   - Browser compatibility
 
 ### 2. Hospital Data Fetching
+1. **Initial Request**
+   - Triggered when user location is obtained
+   - Uses Overpass API with 10km radius
+   - Debounced search with 300ms delay
+   
+2. **Data Processing**
+   - Filters for proper hospitals with emergency services
+   - Calculates distance from user
+   - Sorts by type and distance
+   - Caches results by location
 
-
+3. **Data Categories**
+   - Hospitals
+   - Medical Centres
+   - Other Medical Facilities
 
 ## Performance Optimizations
 
@@ -89,20 +117,33 @@ Hospital Tracker is a React-based web application that helps users locate nearby
 ## Error Handling
 
 ### 1. Geolocation Errors
-
-
+- Permission denied: User notification
+- Position unavailable: Error message display
+- Timeout: Retry mechanism
+- Browser compatibility check
 
 ### 2. API Errors
-
-
+- Network failures: Error state management
+- Timeout handling: 25-second limit
+- Invalid data handling
+- Graceful degradation with error messages
+- Cache fallback when available
 
 ## Configuration
 
 ### Constants
+```javascript
+CONSTANTS = {
+  RADIUS_KM: 10,
+  RADIUS_METERS: 10000,
+  MAP_ZOOM_LEVEL: 13,
+  SELECTED_ZOOM_LEVEL: 15,
+  CACHE_PRECISION: 100,
+  API_TIMEOUT: 25
+}
+```
 
-
-
-## Styling Architecture
+### Styling Architecture
 
 ### CSS Organization
 - Component-specific styles
@@ -111,24 +152,40 @@ Hospital Tracker is a React-based web application that helps users locate nearby
 - Custom animations
 
 ### Key Style Classes
-
+- `.map-container`: Main layout container
+- `.map-div`: Map visualization container
+- `.hospitals-list`: Hospital list sidebar
+- `.hospital-item`: Individual hospital entry
+  - `.emergency`: Emergency hospital styling
+  - `.medical-centre`: Medical centre styling
+  - `.other-facility`: Other facility styling
+  - `.selected`: Selected item highlighting
+- `.popup-content`: Map marker popup styling
+- `.loading-spinner`: Loading state animation
+- `.error-message`: Error display styling
+- `.no-results`: Empty results message
 
 ## Development Setup
 
 ### Prerequisites
 - Node.js >= 14
 - npm >= 6
+- Modern web browser with geolocation support
 
 ### Installation
-
-
+1. Clone the repository
+2. Run `npm install` to install dependencies
+3. Create `.env` file with required environment variables
 
 ### Running Locally
-
+1. `npm start` - Starts development server
+2. Open `http://localhost:3000` in browser
+3. Allow location access when prompted
 
 ### Building for Production
-
-
+1. `npm run build` - Creates optimized production build
+2. Deploy the contents of the `build` directory
+3. Ensure HTTPS for geolocation API support
 
 ## Security Considerations
 
@@ -173,3 +230,12 @@ Hospital Tracker is a React-based web application that helps users locate nearby
   - `User-Agent`: 'HospitalFinder/1.0'
 
 ### Sample Query
+```overpassql
+[out:json][timeout:25];
+(
+  node["amenity"="hospital"]["healthcare"="hospital"](around:10000,${lat},${lng});
+  way["amenity"="hospital"]["healthcare"="hospital"](around:10000,${lat},${lng});
+  relation["amenity"="hospital"]["healthcare"="hospital"](around:10000,${lat},${lng});
+);
+out body center;
+```
